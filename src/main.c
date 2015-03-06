@@ -54,19 +54,6 @@ char** get_files_in_directory(DIR* dir)
     return files - num_files;
 }
 
-void list_files_in_directory(DIR* dir)
-{
-    unsigned num_files = num_files_in_directory(dir);
-    char** files = get_files_in_directory(dir);
-    for (unsigned i = 0; i < num_files; ++i)
-    {
-        puts(files[i]);
-        free(files[i]);
-    }
-
-    free(files);
-}
-
 char* get_extension_from_filename(const char* filename)
 {
     char* last_dot = strrchr(filename, '.');
@@ -94,7 +81,6 @@ int main(int argc, char* argv[])
     }
 
     DIR* from_dir = open_directory(argv[2]);
-    list_files_in_directory(from_dir);
     
     return 0;
 }
