@@ -67,6 +67,24 @@ void list_files_in_directory(DIR* dir)
     free(files);
 }
 
+char* get_extension_from_filename(const char* filename)
+{
+    char* last_dot = strrchr(filename, '.');
+
+    if (last_dot == NULL || *(last_dot + 1) == '\0')
+    {
+        return "";
+    }
+    else
+    {
+        unsigned extension_length = strlen(filename) - (last_dot - filename) - 1; /* -1 so we don't count the dot itself */
+        char* extension = malloc(sizeof(char) * (extension_length + 1));
+        strncpy(extension, last_dot + 1, extension_length + 1); /* extension_length + 1 so we copy the null character */
+
+        return extension;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc != 4)
