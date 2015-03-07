@@ -118,6 +118,47 @@ char** get_files_with_extension(DIR* dir, char* extension)
     return files_with_extension - num_files_with_ext;
 }
 
+void free_files_array(char** array, unsigned num)
+{
+    for (unsigned i = 0; i < num; ++i)
+    {
+        free(array[i]);
+    }
+
+    free(array);
+}
+
+void move_files(char* extension, char* src_dir, char* dest_dir)
+{
+    DIR* from_dir = open_directory(src_dir);
+    char** files_to_move = get_files_with_extension(from_dir, extension);
+    unsigned num_files_to_move = num_files_with_extension(from_dir, extension);
+
+    for (unsigned i = 0; i < num_files_to_move; ++i)
+    {
+        char* filename = files_to_move[i];
+        char old_path[strlen(filename) + strlen(src_dir) + 1];
+        char new_path[strlen(filename) + strlen(dest_dir) + 1];
+        strcpy(old_path, src_dir);
+        strcat(old_path, "/");
+        strcat(old_path, filename);
+        
+        strcpy(new_path, dest_dir);
+        strcat(new_path, "/");
+        strcat(new_path, filename);
+
+        if (rename(old_path, new_path) == -1)
+        {
+            free_files_array(files_to_move, num_files_to_move);
+            closedir(from_dir);
+            error(1, errno, "Unable to move \"%s\" to \"%s\"\n", old_path, new_path);
+        }
+    }
+
+    free_files_array(files_to_move, num_files_to_move);
+    closedir(from_dir);
+}
+
 int main(int argc, char* argv[])
 {
     if (argc != 4)
@@ -126,19 +167,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    DIR* from_dir = open_directory(argv[2]);
-    char** files = get_files_with_extension(from_dir, "c");
-    unsigned num = num_files_with_extension(from_dir, "c");
-    for (unsigned i = 0; i < num; ++i)
-    {
-        printf("%s has extension %s\n", files[i], "c");
-    }
+    move_files(argv[1], argv[2], argv[3]);
 
-    for (unsigned i = 0; i < num; ++i)
-    {
-        free(files[i]);
-    }
-    free(files);
-    
     return 0;
 }
