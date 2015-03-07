@@ -51,6 +51,7 @@ char** get_files_in_directory(DIR* dir)
         *files++ = strdup(file->d_name);
     }
 
+    rewinddir(dir);
     return files - num_files;
 }
 
@@ -72,6 +73,51 @@ char* get_extension_from_filename(const char* filename)
     }
 }
 
+unsigned num_files_with_extension(DIR* dir, char* extension)
+{
+    char** files = get_files_in_directory(dir);
+    unsigned num_files = num_files_in_directory(dir);
+
+    unsigned num = 0;
+
+    for (unsigned i = 0; i < num_files; ++i)
+    {
+        char* ext = get_extension_from_filename(files[i]);
+        if (strcmp(ext, extension) == 0)
+        {
+            ++num;
+        }
+    }
+
+    return num;
+}
+
+char** get_files_with_extension(DIR* dir, char* extension)
+{
+    char** files = get_files_in_directory(dir);
+    unsigned num_files = num_files_in_directory(dir);
+    unsigned num_files_with_ext = num_files_with_extension(dir, extension);
+
+    char** files_with_extension = malloc(sizeof(char*) * num_files_with_ext);
+
+    for (unsigned i = 0; i < num_files; ++i)
+    {
+        char* ext = get_extension_from_filename(files[i]);
+        if (strcmp(ext, extension) == 0)
+        {
+            *files_with_extension++ = strdup(files[i]);
+        }
+    }
+
+    for (unsigned i = 0; i < num_files; ++i)
+    {
+        free(files[i]);
+    }
+    free(files);
+
+    return files_with_extension - num_files_with_ext;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc != 4)
@@ -81,6 +127,18 @@ int main(int argc, char* argv[])
     }
 
     DIR* from_dir = open_directory(argv[2]);
+    char** files = get_files_with_extension(from_dir, "c");
+    unsigned num = num_files_with_extension(from_dir, "c");
+    for (unsigned i = 0; i < num; ++i)
+    {
+        printf("%s has extension %s\n", files[i], "c");
+    }
+
+    for (unsigned i = 0; i < num; ++i)
+    {
+        free(files[i]);
+    }
+    free(files);
     
     return 0;
 }
