@@ -163,6 +163,8 @@ void move_files(char* extension, char* src_dir, char* dest_dir)
 
 int main(int argc, char* argv[])
 {
+    gtk_init(&argc, &argv);
+
     if (argc != 4)
     {
         fprintf(stderr, "Usage: %s <extension> <from> <to>\n", argv[0]);
@@ -171,11 +173,37 @@ int main(int argc, char* argv[])
 
     /* move_files(argv[1], argv[2], argv[3]); */
 
-    gtk_init(&argc, &argv);
     GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "gmv");
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     gtk_widget_show(window);
+
+    GtkWidget *from_btn = gtk_button_new_with_label("From"),
+              *to_btn = gtk_button_new_with_label("To"),
+              *move_btn = gtk_button_new_with_label("Move"),
+              *from_entry = gtk_entry_new(),
+              *to_entry = gtk_entry_new();
+
+    gtk_editable_set_editable(GTK_EDITABLE(from_entry), FALSE);
+    gtk_editable_set_editable(GTK_EDITABLE(to_entry), FALSE);
+
+    GtkWidget* grid = gtk_grid_new();
+    gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_grid_attach(GTK_GRID(grid), from_entry, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), from_btn, 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_entry, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_btn, 1, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), move_btn, 0, 2, 2, 1);
+
+    GtkWidget* dialog = gtk_file_chooser_dialog_new("Select folder",
+                                                    GTK_WINDOW(window),
+                                                    GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                                    "Cancel", GTK_RESPONSE_CANCEL,
+                                                    "Select", GTK_RESPONSE_ACCEPT,
+                                                    NULL);
+
+    gtk_widget_show_all(window);
+
     gtk_main();
 
     return 0;
