@@ -5,6 +5,8 @@
 #include <dirent.h>
 #include <string.h>
 
+#include <gtk/gtk.h>
+
 #define MAX_FILENAME_LENGTH 256
 
 DIR* open_directory(const char* dir_name)
@@ -167,7 +169,14 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    move_files(argv[1], argv[2], argv[3]);
+    /* move_files(argv[1], argv[2], argv[3]); */
+
+    gtk_init(&argc, &argv);
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "gmv");
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    gtk_widget_show(window);
+    gtk_main();
 
     return 0;
 }
