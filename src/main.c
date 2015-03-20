@@ -9,6 +9,16 @@
 
 #define MAX_FILENAME_LENGTH 256
 
+GtkWidget* window;
+GtkWidget* from_btn;
+GtkWidget* to_btn;
+GtkWidget* move_btn;
+GtkWidget* from_entry;
+GtkWidget* to_entry;
+GtkWidget* grid;
+GtkWidget* from_dialog;
+GtkWidget* to_dialog;
+
 DIR* open_directory(const char* dir_name)
 {
     DIR* dir = opendir(dir_name);
@@ -161,45 +171,95 @@ void move_files(char* extension, char* src_dir, char* dest_dir)
     closedir(from_dir);
 }
 
+void get_from_directory(GtkWidget* widget, gpointer data)
+{
+    gint response = gtk_dialog_run(GTK_DIALOG(from_dialog));
+    if (response == GTK_RESPONSE_ACCEPT)
+    {
+        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(from_dialog));
+        gtk_entry_set_text(GTK_ENTRY(from_entry), filename);
+    }
+    gtk_widget_hide(from_dialog);
+}
+
+void get_to_directory(GtkWidget* widget, gpointer data)
+{
+    gint response = gtk_dialog_run(GTK_DIALOG(to_dialog));
+    if (response == GTK_RESPONSE_ACCEPT)
+    {
+        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(to_dialog));
+        gtk_entry_set_text(GTK_ENTRY(to_entry), filename);
+    }
+    gtk_widget_hide(to_dialog);
+}
+
+void setup_window()
+{
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "gmv");
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    gtk_widget_show(window);
+}
+
+void setup_buttons()
+{
+    from_btn = gtk_button_new_with_label("From");
+    to_btn = gtk_button_new_with_label("To");
+    move_btn = gtk_button_new_with_label("Move");
+
+    g_signal_connect(from_btn, "clicked", G_CALLBACK(get_from_directory), NULL);
+    g_signal_connect(to_btn, "clicked", G_CALLBACK(get_to_directory), NULL);
+}
+
+void setup_entries()
+{
+    from_entry = gtk_entry_new();
+    to_entry = gtk_entry_new();
+
+    gtk_editable_set_editable(GTK_EDITABLE(from_entry), FALSE);
+    gtk_editable_set_editable(GTK_EDITABLE(to_entry), FALSE);
+}
+
+void setup_grid()
+{
+    grid = gtk_grid_new();
+    gtk_container_add(GTK_CONTAINER(window), grid);
+    gtk_grid_attach(GTK_GRID(grid), from_entry, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), from_btn, 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_entry, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), to_btn, 1, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), move_btn, 0, 2, 2, 1);
+}
+
+void setup_dialogs()
+{
+    from_dialog = gtk_file_chooser_dialog_new("From",
+            GTK_WINDOW(window),
+            GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+            "Cancel", GTK_RESPONSE_CANCEL,
+            "Select", GTK_RESPONSE_ACCEPT,
+            NULL);
+
+    to_dialog = gtk_file_chooser_dialog_new("To",
+            GTK_WINDOW(window),
+            GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+            "Cancel", GTK_RESPONSE_CANCEL,
+            "Select", GTK_RESPONSE_ACCEPT,
+            NULL);
+}
+
 int main(int argc, char* argv[])
 {
     gtk_init(&argc, &argv);
 
     if (argc == 1)
     {
-        GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_title(GTK_WINDOW(window), "gmv");
-        g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-        gtk_widget_show(window);
-
-        GtkWidget *from_btn = gtk_button_new_with_label("From"),
-                  *to_btn = gtk_button_new_with_label("To"),
-                  *move_btn = gtk_button_new_with_label("Move"),
-                  *from_entry = gtk_entry_new(),
-                  *to_entry = gtk_entry_new();
-
-        gtk_editable_set_editable(GTK_EDITABLE(from_entry), FALSE);
-        gtk_editable_set_editable(GTK_EDITABLE(to_entry), FALSE);
-
-        GtkWidget* grid = gtk_grid_new();
-        gtk_container_add(GTK_CONTAINER(window), grid);
-        gtk_grid_attach(GTK_GRID(grid), from_entry, 0, 0, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), from_btn, 1, 0, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), to_entry, 0, 1, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), to_btn, 1, 1, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), move_btn, 0, 2, 2, 1);
-
-        GtkWidget* dialog = gtk_file_chooser_dialog_new("Select folder",
-                GTK_WINDOW(window),
-                GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                "Cancel", GTK_RESPONSE_CANCEL,
-                "Select", GTK_RESPONSE_ACCEPT,
-                NULL);
-
+        setup_window();
+        setup_buttons();
+        setup_entries();
+        setup_grid();
+        setup_dialogs();
         gtk_widget_show_all(window);
-
-        /* https://github.com/steshaw/gtk-examples/blob/master/ch04.button.edit.combo/listbox.c */
-
         gtk_main();
     }
     else if (argc == 4)
@@ -208,7 +268,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        printf("Usage:\nCommand line: %s <extension> <from> <to>\nGUI: %s\n", argv[0], argv[0]);
+        printf("Usage:\n\tCommand line: %s <extension> <from> <to>\n\tGUI: %s\n", argv[0], argv[0]);
         return 1;
     }
 }
